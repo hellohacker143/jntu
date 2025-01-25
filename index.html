@@ -1,56 +1,195 @@
-
-<!-- saved from url=(0027)http://results.jntuh.ac.in/ -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-<script src="./results.jntuh.ac.in_files/jquery.min.js.download"></script>
-<script src="./results.jntuh.ac.in_files/jquery-ui.min.js.download"></script>
-<script type="text/javascript" src="./results.jntuh.ac.in_files/resultsearch.js.download">
-    </script>
-   <script language="JavaScript">
-
- document.onkeypress = function (event) {
-     event = (event || window.event);
-     if (event.keyCode == 123) {
-        //alert('No F-12');
-         return false;
-     }
- }
- document.onmousedown = function (event) {
-     event = (event || window.event);
-     if (event.keyCode == 123) {
-         //alert('No F-keys');
-         return false;
-     }
- }
-document.onkeydown = function (event) {
-     event = (event || window.event);
-     if (event.keyCode == 123) {
-         //alert('No F-keys');
-         return false;
-     }
- }
- 
-function clickIE() {if (document.all) {(message);return false;}} 
-function clickNS(e) {if 
-(document.layers||(document.getElementById&&!document.all)) { 
-if (e.which==2||e.which==3) {(message);return false;}}} 
-if (document.layers) 
-{document.captureEvents(Event.MOUSEDOWN);document.onmousedown=clickNS;} 
-else{document.onmouseup=clickNS;document.oncontextmenu=clickIE;} 
-document.oncontextmenu=new Function("return false"); 
-</script>
-<script type="text/javascript" src="./results.jntuh.ac.in_files/fkeys.js.download">
-    </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game with Hand Pointer</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+    #pointer {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background-color: rgba(255, 0, 0, 0.8);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+    .score {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 24px;
+      z-index: 10;
+    }
+  </style>
 </head>
-<frameset rows="20%,*,10%" frameborder="NO" framespacing="0" border="0">
-	<frame src="./results.jntuh.ac.in_files/header.html" scrolling="no" frameborder="0">
-	 <frameset cols="28%,*" frameborder="NO" framespacing="0" border="0/">
-		<frame src="./results.jntuh.ac.in_files/RCRVInfo.html" frameborder="0"> 
-		<frame src="./results.jntuh.ac.in_files/home.html">
-		
-	</frameset>
-	 <frame src="./results.jntuh.ac.in_files/footer.html" scrolling="no" frameborder="0">
-<style>.chosenBorder{border:1px solid #00F;} </style><div id="design-mode-info-div" style="top: 1px; border: 0px; left: 1px; opacity: 1; padding: 10px; outline: none; display: block; font-size: 11px; position: fixed; box-shadow: none; text-shadow: none; text-align: center; letter-spacing: 2px; z-index: 2147483647; visibility: visible; color: rgb(255, 255, 255); font-family: arial, sans-serif; background: rgb(63, 150, 251);">Edit Mode</div></frameset>
+<body>
+  <video id="webcam" autoplay></video>
+  <canvas id="gameCanvas"></canvas>
+  <div id="pointer"></div>
+  <div class="score" id="score">Score: 0</div>
 
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const pointer = document.getElementById("pointer");
+    const scoreDisplay = document.getElementById("score");
 
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
+    const snake = [{ x: 150, y: 150 }]; // Initial snake position
+    const snakeSize = 20;
+    const snakeSpeed = 5;
+    let snakeHeadX = snake[0].x;
+    let snakeHeadY = snake[0].y;
+    let food = { x: 300, y: 300 };
+    let score = 0;
+
+    // Initialize MediaPipe Hands
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.8,
+      minTrackingConfidence: 0.8,
+    });
+
+    // Initialize Camera
+    const videoElement = document.getElementById("webcam");
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({ image: videoElement });
+      },
+      width: 1280,
+      height: 720,
+    });
+    camera.start();
+
+    // Spawn new food
+    function spawnFood() {
+      food.x = Math.random() * (canvas.width - snakeSize);
+      food.y = Math.random() * (canvas.height - snakeSize);
+    }
+
+    // Draw Snake
+    function drawSnake() {
+      ctx.fillStyle = "green";
+      snake.forEach(segment => {
+        ctx.fillRect(segment.x, segment.y, snakeSize, snakeSize);
+      });
+    }
+
+    // Draw Food
+    function drawFood() {
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, snakeSize, snakeSize);
+    }
+
+    // Check if Snake Eats Food
+    function checkFoodCollision() {
+      if (
+        Math.abs(snakeHeadX - food.x) < snakeSize &&
+        Math.abs(snakeHeadY - food.y) < snakeSize
+      ) {
+        score += 10;
+        snake.push({ x: food.x, y: food.y }); // Add new segment to snake
+        spawnFood();
+      }
+    }
+
+    // Check Collision with Edges
+    function checkEdgeCollision() {
+      if (
+        snakeHeadX < 0 ||
+        snakeHeadY < 0 ||
+        snakeHeadX > canvas.width - snakeSize ||
+        snakeHeadY > canvas.height - snakeSize
+      ) {
+        alert("Game Over! Your Score: " + score);
+        document.location.reload();
+      }
+    }
+
+    // Update Snake Position
+    function updateSnake() {
+      const newHead = { x: snakeHeadX, y: snakeHeadY };
+      snake.unshift(newHead); // Add new head
+      snake.pop(); // Remove tail
+    }
+
+    // Hand Tracking
+    hands.onResults((results) => {
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        const pointerX = landmarks[8].x * canvas.width;
+        const pointerY = landmarks[8].y * canvas.height;
+
+        pointer.style.left = `${pointerX}px`;
+        pointer.style.top = `${pointerY}px`;
+
+        // Smoothly move the snake towards the pointer
+        snakeHeadX += (pointerX - snakeHeadX) * 0.2;
+        snakeHeadY += (pointerY - snakeHeadY) * 0.2;
+      }
+    });
+
+    // Game Loop
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawSnake();
+      drawFood();
+      checkFoodCollision();
+      checkEdgeCollision();
+      updateSnake();
+      scoreDisplay.textContent = `Score: ${score}`;
+      requestAnimationFrame(gameLoop);
+    }
+
+    spawnFood();
+    gameLoop();
+  </script>
+</body>
 </html>
