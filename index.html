@@ -1,195 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snake Game with Hand Pointer</title>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background-color: black;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 1;
-    }
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-    }
-    #pointer {
-      position: absolute;
-      width: 15px;
-      height: 15px;
-      background-color: rgba(255, 0, 0, 0.8);
-      border-radius: 50%;
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      z-index: 3;
-    }
-    .score {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 24px;
-      z-index: 10;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ravikanti Sai Charan - AIML Developer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #001f3f;
+            color: #00ffcc;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            cursor: none;
+        }
+        .container {
+            padding: 20px;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(90deg, #004080, #00264d);
+            padding: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        .nav a {
+            color: #00ffcc;
+            text-decoration: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .nav a:hover, .nav a.active {
+            background: #005580;
+            border-radius: 8px;
+        }
+        .content {
+            display: none;
+            padding: 40px 20px;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        .active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 50vh;
+            background: linear-gradient(180deg, #003366, #001f3f);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .hero-section h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .hero-section p {
+            font-size: 18px;
+            max-width: 600px;
+        }
+        .skills {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .skill-box {
+            background: #005580;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .projects-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .project-box {
+            width: 250px;
+            padding: 20px;
+            background: #003366;
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        .project-box:hover {
+            transform: scale(1.1);
+            background: #004080;
+        }
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 28px;
+            }
+            .hero-section p {
+                font-size: 16px;
+            }
+            .nav {
+                flex-direction: column;
+                align-items: center;
+            }
+            .nav a {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+            .footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(90deg, #00264d, #001f3f);
+            padding: 15px;
+            color: #00ffcc;
+            box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            text-align: center;
+        }
+        .footer a {
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .pointer {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: red;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+</style>
 </head>
 <body>
-  <video id="webcam" autoplay></video>
-  <canvas id="gameCanvas"></canvas>
-  <div id="pointer"></div>
-  <div class="score" id="score">Score: 0</div>
+    <div class="nav">
+        <a id="homeTab" onclick="showTab('home')">Home</a>
+        <a id="educationTab" onclick="showTab('education')">Education</a>
+        <a id="projectsTab" onclick="showTab('projects')">Projects</a>
+        <a id="contactTab" onclick="showTab('contact')">Contact</a>
+    </div>
+    
+    <div class="container">
+        <div id="home" class="content active">
+            <div class="hero-section">
+                <h1>Ravikanti Sai Charan - Full Stack Developer</h1>
+                <p>Building modern, scalable, and AI-powered applications with the latest technologies.</p>
+                <div class="skills">
+                    <span class="skill-box">HTML</span>
+                    <span class="skill-box">CSS</span>
+                    <span class="skill-box">JavaScript</span>
+                    <span class="skill-box">PHP</span>
+                    <span class="skill-box">SQL</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="education" class="content">
+            <h2>Education</h2>
+            <p><strong>School:</strong> SPR</p>
+            <p><strong>Diploma:</strong> SVS</p>
+            <p><strong>B.Tech:</strong> SVS</p>
+        </div>
+        
+        <div id="projects" class="content">
+            <h2>Projects</h2>
+            <div class="projects-container">
+                <div class="project-box">Hand Gesture Recognition using MediaPipe</div>
+                <div class="project-box">AI Chatbot with NLP</div>
+                <div class="project-box">Machine Learning Model for Stock Prediction</div>
+                <div class="project-box">E-commerce Website with MERN Stack</div>
+                <div class="project-box">Portfolio Website with React and Firebase</div>
+                <div class="project-box">Blog CMS using Django</div>
+                <div class="project-box">Resumaker</div>
+                <div class="project-box">Offer Letter Generator</div>
+                <div class="project-box">Python Chat GPT AI Clone</div>
+                <div class="project-box">Hand Gesture Navigation System</div>
+            </div>
+        </div>
+        
+        <div id="contact" class="content">
+            <h2>Contact Details</h2>
+            <p><strong>Phone:</strong> 7660856536</p>
+            <p><strong>Email:</strong> rk917714332@gmail.com</p>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabId) {
+            var contents = document.getElementsByClassName("content");
+            var tabs = document.querySelectorAll(".nav a");
+            tabs.forEach(tab => tab.classList.remove("active"));
+            document.getElementById(tabId + "Tab").classList.add("active");
+            for (var i = 0; i < contents.length; i++) {
+                contents[i].classList.remove("active");
+            }
+            document.getElementById(tabId).classList.add("active");
+        }
+    </script>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const pointer = document.getElementById("pointer");
-    const scoreDisplay = document.getElementById("score");
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const snake = [{ x: 150, y: 150 }]; // Initial snake position
-    const snakeSize = 20;
-    const snakeSpeed = 5;
-    let snakeHeadX = snake[0].x;
-    let snakeHeadY = snake[0].y;
-    let food = { x: 300, y: 300 };
-    let score = 0;
-
-    // Initialize MediaPipe Hands
-    const hands = new Hands({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-    });
-
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.8,
-      minTrackingConfidence: 0.8,
-    });
-
-    // Initialize Camera
-    const videoElement = document.getElementById("webcam");
-
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
-      },
-      width: 1280,
-      height: 720,
-    });
-    camera.start();
-
-    // Spawn new food
-    function spawnFood() {
-      food.x = Math.random() * (canvas.width - snakeSize);
-      food.y = Math.random() * (canvas.height - snakeSize);
-    }
-
-    // Draw Snake
-    function drawSnake() {
-      ctx.fillStyle = "green";
-      snake.forEach(segment => {
-        ctx.fillRect(segment.x, segment.y, snakeSize, snakeSize);
-      });
-    }
-
-    // Draw Food
-    function drawFood() {
-      ctx.fillStyle = "red";
-      ctx.fillRect(food.x, food.y, snakeSize, snakeSize);
-    }
-
-    // Check if Snake Eats Food
-    function checkFoodCollision() {
-      if (
-        Math.abs(snakeHeadX - food.x) < snakeSize &&
-        Math.abs(snakeHeadY - food.y) < snakeSize
-      ) {
-        score += 10;
-        snake.push({ x: food.x, y: food.y }); // Add new segment to snake
-        spawnFood();
-      }
-    }
-
-    // Check Collision with Edges
-    function checkEdgeCollision() {
-      if (
-        snakeHeadX < 0 ||
-        snakeHeadY < 0 ||
-        snakeHeadX > canvas.width - snakeSize ||
-        snakeHeadY > canvas.height - snakeSize
-      ) {
-        alert("Game Over! Your Score: " + score);
-        document.location.reload();
-      }
-    }
-
-    // Update Snake Position
-    function updateSnake() {
-      const newHead = { x: snakeHeadX, y: snakeHeadY };
-      snake.unshift(newHead); // Add new head
-      snake.pop(); // Remove tail
-    }
-
-    // Hand Tracking
-    hands.onResults((results) => {
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
-        const pointerX = landmarks[8].x * canvas.width;
-        const pointerY = landmarks[8].y * canvas.height;
-
-        pointer.style.left = `${pointerX}px`;
-        pointer.style.top = `${pointerY}px`;
-
-        // Smoothly move the snake towards the pointer
-        snakeHeadX += (pointerX - snakeHeadX) * 0.2;
-        snakeHeadY += (pointerY - snakeHeadY) * 0.2;
-      }
-    });
-
-    // Game Loop
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawSnake();
-      drawFood();
-      checkFoodCollision();
-      checkEdgeCollision();
-      updateSnake();
-      scoreDisplay.textContent = `Score: ${score}`;
-      requestAnimationFrame(gameLoop);
-    }
-
-    spawnFood();
-    gameLoop();
-  </script>
+    <footer class="footer">
+        <p>&copy; 2025 Ravikanti Sai Charan. All rights reserved.</p>
+        <p>
+            <a href="tel:7660856536">Phone: 7660856536</a>
+            <br>
+            <a href="mailto:rk917714332@gmail.com">Email: rk917714332@gmail.com</a>
+        </p>
+    </footer>
+    <script>
+        const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.8, minTrackingConfidence: 0.8 });
+        
+        const videoElement = document.createElement('video');
+        document.body.appendChild(videoElement);
+        videoElement.style.display = 'none';
+        
+        const pointer = document.createElement('div');
+        pointer.classList.add('pointer');
+        document.body.appendChild(pointer);
+        
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({ image: videoElement });
+            },
+            width: 300,
+            height: 400
+        });
+        camera.start();
+        
+        hands.onResults(results => {
+            if (results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const x = landmarks[8].x * window.innerWidth;
+                const y = landmarks[8].y * window.innerHeight;
+                pointer.style.left = `${x}px`;
+                pointer.style.top = `${y}px`;
+                
+                document.querySelectorAll('.nav a').forEach(tab => {
+                    const rect = tab.getBoundingClientRect();
+                    if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                        tab.click();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
+
+
